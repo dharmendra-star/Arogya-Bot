@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="ArogyaBot — AI-powered rural health assistant for India. Describe your symptoms, find nearby hospitals, and set medicine reminders in English or Hindi."/>
+<title>ArogyaBot — Rural Health Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"/>
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- App Stylesheet -->
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </div>
+    <div>
+      <span class="logo-text">ArogyaBot</span>
+      <span class="logo-sub" id="header-sub">AI Rural Health Assistant</span>
+    </div>
+  </div>
+  <div class="lang-toggle">
+    <button onclick="setLang('en')" id="btn-en" class="active">EN</button>
+    <button onclick="setLang('hi')" id="btn-hi">हि</button>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('chat')" id="tab-chat">💬 <span id="tab-chat-label">Chat</span></button>
+  <button class="tab-btn" onclick="switchTab('hospitals')" id="tab-hospitals">🏥 <span id="tab-hosp-label">Hospitals</span></button>
+  <button class="tab-btn" onclick="switchTab('reminders')" id="tab-reminders">🔔 <span id="tab-rem-label">Reminders</span></button>
+</div>
+
+<main>
+
+  <!-- CHAT TAB -->
+  <div class="tab-content active" id="content-chat">
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg-row bot">
+        <div class="msg-avatar bot-avatar">AB</div>
+        <div class="msg-bubble bot-bubble" id="welcome-msg">
+          Hello! I'm ArogyaBot 🌿 Your AI health companion for rural India.<br/><br/>
+          Tell me your symptoms and I'll help you understand what might be happening and whether you need to see a doctor.<br/><br/>
+          <em>You can also speak in Hindi using the 🎤 button!</em>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <div class="quick-chips" id="quick-chips">
+        <button class="chip" onclick="sendChip('Fever & headache')">Fever &amp; headache</button>
+        <button class="chip" onclick="sendChip('Stomach pain')">Stomach pain</button>
+        <button class="chip" onclick="sendChip('Cough & cold')">Cough &amp; cold</button>
+        <button class="chip" onclick="sendChip('Chest pain')">Chest pain</button>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" rows="1" placeholder="Describe your symptoms..." onkeydown="handleEnter(event)" oninput="autoResize(this)"></textarea>
+        <button class="mic-btn" id="mic-btn" onclick="toggleVoice()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <button class="send-btn" onclick="sendMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOSPITALS TAB -->
+  <div class="tab-content" id="content-hospitals">
+    <div class="hospital-content">
+      <div class="location-card">
+        <p id="hosp-intro">Find PHCs, government hospitals, and clinics near your location.</p>
+        <button class="locate-btn" id="locate-btn" onclick="findHospitals()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+            <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+          </svg>
+          <span id="locate-btn-text">Find Nearby Hospitals</span>
+        </button>
+      </div>
+      <div id="map-container" style="display:none"></div>
+      <div class="hospital-list" id="hospital-list"></div>
+    </div>
+  </div>
+
+  <!-- REMINDERS TAB -->
+  <div class="tab-content" id="content-reminders">
+    <div class="reminder-content">
+      <div class="reminder-form">
+        <div class="form-title">🔔 <span id="reminder-form-title">Add Medicine Reminder</span></div>
+        <div id="notif-status" style="background:#F0FAF4;border:1px solid #52B788;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.82rem;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <span id="notif-status-text" style="color:#1A5C38;font-weight:600;">🔔 Notification status: Checking...</span>
+          <button onclick="testNotification()" style="background:#1A5C38;color:white;border:none;border-radius:8px;padding:6px 14px;font-family:'Sora',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;">Test Now 🔔</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label" id="lbl-med-name" for="med-name">Medicine Name</label>
+            <input type="text" class="form-input" id="med-name" placeholder="e.g. Paracetamol 500mg"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="lbl-dosage" for="med-dosage">Dosage</label>
+            <input type="text" class="form-input" id="med-dosage" placeholder="1 tablet"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="lbl-freq" for="med-freq">Frequency</label>
+            <select class="form-select" id="med-freq">
+              <option>Once daily</option>
+              <option>Twice daily</option>
+              <option>Three times daily</option>
+              <option>Every 8 hours</option>
+              <option>Before meals</option>
+              <option>After meals</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="lbl-time" for="med-time">Time</label>
+            <input type="time" class="form-input" id="med-time" value="08:00"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="lbl-duration" for="med-duration">Duration</label>
+            <input type="text" class="form-input" id="med-duration" placeholder="7 days"/>
+          </div>
+        </div>
+        <button class="add-reminder-btn" onclick="addReminder()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <span id="add-btn-label">Add Reminder</span>
+        </button>
+      </div>
+      <div class="reminders-list" id="reminders-list">
+        <div class="no-reminders" id="no-reminders">
+          <p style="font-size:2rem;margin-bottom:8px">💊</p>
+          <p id="no-rem-text">No reminders yet. Add your first medicine reminder!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- App JavaScript -->
+<script src="app.js"></script>
+</body>
+</html>

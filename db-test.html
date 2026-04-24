@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>ArogyaBot — Supabase Database Test</title>
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Test Stylesheet -->
+<link rel="stylesheet" href="db-test.css"/>
+</head>
+<body>
+<h1>🌿 ArogyaBot — Supabase Database Test</h1>
+<p style="color:#4B5563">This page tests your Supabase connection and lets you insert & view real data.</p>
+
+<!-- Connection Status -->
+<div class="card">
+  <div class="status" id="conn-status">⏳ Checking connection...</div>
+  <div id="conn-detail" style="color:#4B5563; font-size:13px"></div>
+</div>
+
+<!-- Test Buttons -->
+<div class="card">
+  <h3 style="margin-top:0; color:#1A5C38">🧪 Run Tests</h3>
+  <button class="btn" onclick="insertConsultations()">➕ Insert Sample Consultations</button>
+  <button class="btn" onclick="insertReminders()">💊 Insert Sample Reminders</button>
+  <button class="btn orange" onclick="readAll()">📊 Read All Data</button>
+  <button class="btn red" onclick="clearTestData()">🗑️ Clear Test Data</button>
+  <div class="log" id="log">Ready. Click a button to start testing...</div>
+</div>
+
+<!-- Data Tables -->
+<div class="card" id="data-section" style="display:none">
+  <h3 style="margin-top:0; color:#1A5C38">📋 Consultations Table</h3>
+  <div id="consult-table"></div>
+  <h3 style="color:#1A5C38; margin-top:20px">💊 Reminders Table</h3>
+  <div id="reminder-table"></div>
+</div>
+<!-- Test Script -->
+<script src="db-test.js"></script>
+</body>
+</html>
